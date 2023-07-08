@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {
+    Box,
     Button,
-    Container,
+    Container, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
     Paper,
     styled,
     Table,
@@ -13,6 +14,7 @@ import {
     TextField,
     Typography
 } from "@mui/material";
+import {Menu as MenuIcon, Check as CheckIcon, Clear as ClearIcon, Inbox as InboxIcon} from "@mui/icons-material"
 
 interface Customer {
     id: number;
@@ -35,14 +37,16 @@ const Crm: React.FC = () => {
         const storedCustomers = localStorage.getItem("customers");
         return storedCustomers ? JSON.parse(storedCustomers) : [];
     });
+    const [editedCustomer, setEditedCustomer] = useState(null);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [editActive, setEditActive] = useState(false);
-    const [editId, setEdiId] = useState<number>();
+    const [editId, setEditId] = useState<number>();
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     const saveAndClear = () => {
-        setEdiId(0);
+        setEditId(0);
         setName('');
         setEmail('');
         setPhone('');
@@ -76,12 +80,12 @@ const Crm: React.FC = () => {
         saveAndClear();
     }
     const handleEditCustomer = (customerId: number) => {
-        const findCustomer = customers.find(item => item.id === customerId);
-        if (findCustomer) {
-            setEdiId(findCustomer.id);
-            setName(findCustomer.name);
-            setEmail(findCustomer.email);
-            setPhone(findCustomer.phone);
+        const customerEdit = customers.find(item => item.id === customerId);
+        if (customerEdit) {
+            setEditId(customerEdit.id);
+            setName(customerEdit.name);
+            setEmail(customerEdit.email);
+            setPhone(customerEdit.phone);
             setEditActive(true);
         }
     }
@@ -89,9 +93,9 @@ const Crm: React.FC = () => {
     const handleSaveEditCustomer = () => {
         const saveEdit = customers.map(item => item.id === editId ? {
             ...item,
-            name: name,
-            email: email,
-            phone: phone
+            name,
+            email,
+            phone
         } : item)
         setCustomers(saveEdit);
         setEditActive(false);
@@ -103,7 +107,30 @@ const Crm: React.FC = () => {
             <Typography variant="h4">
                 CRM
             </Typography>
-            {/*SlideBar opens here*/}
+
+
+            <IconButton onClick={() => setIsDrawerOpen(true)}>
+                <MenuIcon/>
+            </IconButton>
+
+            <Drawer
+                open={isDrawerOpen}
+                onClose={() => setIsDrawerOpen(false)}
+            >
+                <Box sx={{width: "250px"}}>
+                    <List>
+                        <ListItem >
+                            <ListItemButton>
+                                <ListItemIcon>
+                                    <InboxIcon/>
+                                </ListItemIcon>
+                                <ListItemText>Inbox</ListItemText>
+                            </ListItemButton>
+                        </ListItem>
+                    </List>
+                </Box>
+
+            </Drawer>
 
             <form style={{display: "block", marginBottom: "15px"}}>
                 <TextField sx={{width: {md: 800}}} label="Name" value={name} onChange={handleNameChange}
@@ -119,7 +146,6 @@ const Crm: React.FC = () => {
                     <MyButton onClick={handleAddCustomer}>Add Customer</MyButton>}
             </div>
 
-
             {customers.length > 0 && <TableContainer component={Paper}>
                 <Table sx={{minWidth: 650}}>
                     <TableHead>
@@ -127,23 +153,51 @@ const Crm: React.FC = () => {
                             <TableCell>Name</TableCell>
                             <TableCell>Email</TableCell>
                             <TableCell>Phone</TableCell>
+                            <TableCell></TableCell>
+                            <TableCell></TableCell>
+                            <TableCell></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {customers.map((item) => (
-                            <TableRow
-                                key={item.id}
-                            >
-                                <TableCell>{item.name}</TableCell>
-                                <TableCell>{item.email}</TableCell>
-                                <TableCell>{item.phone}</TableCell>
-                                <TableCell><Button onClick={() => handleEditCustomer(item.id)}>EDIT</Button></TableCell>
-                                <TableCell><Button onClick={() => handleDeleteCustomer(item.id)}>DELETE</Button></TableCell>
+                            <TableRow key={item.id}>
+                                {editId === item.id ? (
+                                        <>
+                                            <TableCell>
+                                                <TextField value={name} onChange={handleNameChange}></TextField>
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField value={email} onChange={handleEmailChange}></TextField>
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField value={phone} onChange={handlePhoneChange}></TextField>
+                                            </TableCell>
+                                            <TableCell>
+                                                <IconButton aria-label="Update" onClick={handleSaveEditCustomer}>
+                                                    <CheckIcon/>
+                                                </IconButton>
+                                                <IconButton aria-label="Update" onClick={() => setEditId(0)}>
+                                                    <ClearIcon/>
+                                                </IconButton>
+                                            </TableCell>
+                                        </>
+                                    ) : (
+                                        <>
+                                        <TableCell>{item.name}</TableCell>
+                                        <TableCell>{item.email}</TableCell>
+                                        <TableCell>{item.phone}</TableCell>
+                                        {/*<TableCell><IconButton nClick={() => handleDeleteCustomer(item.id)}><EditIcon></IconButton></TableCell>*/}
+                                        <TableCell><Button
+                                            onClick={() => handleEditCustomer(item.id)}>EDIT</Button></TableCell>
+                                        <TableCell><Button onClick={() => handleDeleteCustomer(item.id)}>DELETE</Button></TableCell>
+                                    </>)
+                                }
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </TableContainer>}
+
         </Container>
     );
 };
